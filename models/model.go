@@ -8,7 +8,7 @@ import (
 
 type User struct { // 用户表
 	Id         int
-	Name       string	`orm:"size(20)"`
+	Name       string	`orm:"size(20);unique"`
 	Password   string	`orm:"size(20)"`
 	Email      string	`orm:"size(50)"`
 	IsActive   bool		`orm:"default(false)"`
@@ -129,7 +129,7 @@ type OrderGoods struct {	// 订单商品表
 
 func init() {
 	// RegisterDataBase
-	_ = orm.RegisterDataBase("default", "mysql", "root:zj2fighting@(192.168.3.99:3306)/dailyFresh?charset=utf8&loc=local")
+	_ = orm.RegisterDataBase("default", "mysql", "root:zj2fighting@(192.168.3.99:3306)/dailyFresh?charset=utf8&loc=Local")
 
 	// RegisterModel
 	orm.RegisterModel(
