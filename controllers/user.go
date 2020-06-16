@@ -162,12 +162,55 @@ func (u *UserController) HandleLogin() {
 
 	remember := u.GetString("remember")
 	if remember == "on" {
-		// cookie不能存中文, 遇到中文将其转换成base64再存储
+		// cookie不能存中文, 硬存对应字段为空, 遇到中文将其转换成base64再存储
 		temp := base64.StdEncoding.EncodeToString([]byte(userName))
 		u.Ctx.SetCookie("userName", temp, 3600 * 24)
 	} else {
 		u.Ctx.SetCookie("userName", userName, -1)
 	}
 
-	u.Ctx.WriteString("登录成功!")
+	// 保存到session中
+	userInfo := map[string]string{"userName":user.Name, "userId":strconv.Itoa(user.Id)}
+	u.SetSession("userInfo", userInfo)
+
+	// 跳转homePage
+	// u.Ctx.WriteString("登录成功")
+	u.Redirect("/", 302)
+}
+
+// 退出操作
+func (u *UserController) Logout() {
+	u.DelSession("userInfo")
+	u.Redirect("/", 302)
+}
+
+// 用户中心
+func (u *UserController) ShowUserInfo() {
+	u.Layout = "user_center_layout.html"
+	u.TplName = "user_center_info.html"
+}
+
+// 用户订单信息
+func (u *UserController) ShowUserOrder() {
+	u.Layout = "user_center_layout.html"
+	u.TplName = "user_center_order.html"
+}
+
+// 用户地址信息
+func (u *UserController) ShowUserAddr() {
+	u.Layout = "user_center_layout.html"
+	u.TplName = "user_center_site.html"
+}
+
+// 获取session中的用户信息
+func GetUserInfo(c *beego.Controller) (u map[string]string) {
+	userInfo := c.GetSession("userInfo")
+	u, ok := userInfo.(map[string]string)
+	if userInfo == nil || !ok {
+		c.Data["userName"] = ""
+	} else {
+		c.Data["userName"] = u["userName"]
+	}
+
+	return
 }
