@@ -4,6 +4,7 @@ import (
 	"dailyFresh/models"
 	"encoding/base64"
 	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/orm"
 	"github.com/astaxie/beego/utils"
 	"regexp"
@@ -184,27 +185,95 @@ func (u *UserController) Logout() {
 	u.Redirect("/", 302)
 }
 
-// 用户中心
+// 展示用户中心页
 func (u *UserController) ShowUserInfo() {
+	// 此处无需判断userInfo是否为空, 进入这个页前会有登录检测
+	userInfo := GetUserInfo(&u.Controller)
+	// 高级查询
+	var addr models.Address
+	_ = orm.NewOrm().QueryTable("Address").RelatedSel("User").
+			Filter("User__Id", userInfo["userId"]).
+			OrderBy("-IsDefault").One(&addr)
+	if addr.Id == 0 {
+		u.Data["addr"] = nil
+	} else {
+		u.Data["addr"] = addr
+	}
+	u.Data["tabName"] = "userCenter"
 	u.Layout = "user_center_layout.html"
 	u.TplName = "user_center_info.html"
 }
 
-// 用户订单信息
+// 展示用户订单页
 func (u *UserController) ShowUserOrder() {
+	_ = GetUserInfo(&u.Controller)
+	u.Data["tabName"] = "userOrder"
 	u.Layout = "user_center_layout.html"
 	u.TplName = "user_center_order.html"
 }
 
-// 用户地址信息
+// 展示用户地址页
 func (u *UserController) ShowUserAddr() {
+	userInfo := GetUserInfo(&u.Controller)
+	var addr models.Address
+	_ = orm.NewOrm().QueryTable("Address").RelatedSel("User").
+		Filter("User__Id", userInfo["userId"]).
+		Filter("IsDefault", true).One(&addr)
+	if addr.Id == 0 {
+		u.Data["addr"] = nil
+	} else {
+		u.Data["addr"] = addr
+	}
+	u.Data["tabName"] = "userAddr"
 	u.Layout = "user_center_layout.html"
 	u.TplName = "user_center_site.html"
+}
+
+// 添加用户地址信息
+func (u *UserController) HandleUserAddr() {
+	// 获取信息
+	receiver := u.GetString("receiver")
+	address := u.GetString("address")
+	postCode := u.GetString("postCode")
+	phone := u.GetString("phone")
+	// 校验信息
+	if receiver == "" || address == "" || postCode == "" || phone == "" {
+		logs.Info("HandleUserAddr: 地址信息不全")
+		u.Redirect("/user/useraddress", 302)
+	}
+	// 处理信息
+	// 添加的地址直接是默认的地址
+	o := orm.NewOrm()
+	var defaultAddr models.Address
+	defaultAddr.IsDefault = true
+	err := o.Read(&defaultAddr, "IsDefault")
+	if err == nil { // 原来有默认地址, 更新原来地址isDefault字段
+		defaultAddr.IsDefault = false
+		_, _ = o.Update(&defaultAddr, "IsDefault")
+	}
+	// 新增地址, 设置为默认地址
+	var newAddr models.Address
+	var user models.User
+	userId := GetUserInfo(&u.Controller)["userId"]
+	user.Id, _ = strconv.Atoi(userId)
+
+	newAddr.Receiver = receiver
+	newAddr.Addr = address
+	newAddr.PostCode = postCode
+	newAddr.Phone = phone
+	newAddr.IsDefault = true
+	// 设置关联
+	newAddr.User = &user
+	_, _ = o.Insert(&newAddr)
+
+	// 返回视图
+	u.Redirect("/user/useraddress", 302)
 }
 
 // 获取session中的用户信息
 func GetUserInfo(c *beego.Controller) (u map[string]string) {
 	userInfo := c.GetSession("userInfo")
+	// map和slice的零值为nil
 	u, ok := userInfo.(map[string]string)
 	if userInfo == nil || !ok {
 		c.Data["userName"] = ""

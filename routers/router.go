@@ -20,7 +20,7 @@ func init() {
 	// 2. 用户中心
 	beego.Router("/user/usercenter", &controllers.UserController{}, "get:ShowUserInfo")
 	beego.Router("/user/userorder", &controllers.UserController{}, "get:ShowUserOrder")
-	beego.Router("/user/useraddress", &controllers.UserController{}, "get:ShowUserAddr")
+	beego.Router("/user/useraddress", &controllers.UserController{}, "get:ShowUserAddr;post:HandleUserAddr")
 
     // 商品模块
     beego.Router("/", &controllers.GoodsController{}, "get:ShowHomePage")

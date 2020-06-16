@@ -2,9 +2,13 @@
 	<div class="info_con clearfix">
 		<h3 class="common_title2">基本信息</h3>
 		<ul class="user_info_list">
-			<li><span>用户名：</span>18210569700</li>
-			<li><span>联系方式：</span>18210569700</li>
-			<li><span>联系地址：</span>北京市昌平区</li>
+			<li><span>用户名：</span>{{.userName}}</li>
+			{{if compare .addr nil}}
+				<li>没有地址信息</li>
+			{{else}}
+				<li><span>联系方式：</span>{{.addr.Phone}}</li>
+				<li><span>联系地址：</span>{{.addr.Addr}}</li>
+			{{end}}
 		</ul>
 	</div>
 

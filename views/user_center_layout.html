@@ -49,9 +49,9 @@
         <div class="left_menu_con clearfix">
             <h3>用户中心</h3>
             <ul>
-                <li><a href="/user/usercenter" class="active">· 个人信息</a></li>
-                <li><a href="/user/userorder">· 全部订单</a></li>
-                <li><a href="/user/useraddress">· 收货地址</a></li>
+                <li><a href="/user/usercenter" {{if compare .tabName "userCenter"}} class="active" {{else}} class="" {{end}}>· 个人信息</a></li>
+                <li><a href="/user/userorder" {{if compare .tabName "userOrder"}} class="active" {{else}} class="" {{end}}>· 全部订单</a></li>
+                <li><a href="/user/useraddress" {{if compare .tabName "userAddr"}} class="active" {{else}} class="" {{end}}>· 收货地址</a></li>
             </ul>
         </div>
         {{.LayoutContent}}
