@@ -43,7 +43,7 @@ type GoodsType struct { // 商品类型表
 	Id 		int
 	Name 	string		`orm:"size(20)"`
 	Logo	string
-	typeImg string
+	TypeImg string
 
 	GoodsSPUs []*GoodsSPU `orm:"reverse(many)"`
 	HomeShowGoods []*HomeShowGoods `orm:"reverse(many)"`
