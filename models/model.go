@@ -10,7 +10,7 @@ type User struct { // 用户表
 	Id         int
 	Name       string	`orm:"size(20);unique"`
 	Password   string	`orm:"size(20)"`
-	Email      string	`orm:"size(50)"`
+	Email      string	`orm:"size(50);default('')"`
 	IsActive   bool		`orm:"default(false)"`
 	Permission int		`orm:"default(0)"`	// 权限设置 0 普通用户 1 管理员
 
@@ -36,17 +36,15 @@ type GoodsSPU struct { // 商品SPU表
 	GoodsDetail	string	`orm:"size(200)"`
 
 	GoodsSKUs []*GoodsSKU `orm:"reverse(many)"`
-	GoodsType *GoodsType  `orm:"rel(fk)"`
 }
 
 type GoodsType struct { // 商品类型表
-	Id 		int
-	Name 	string		`orm:"size(20)"`
-	Logo	string
+	Id      int
+	Name    string		`orm:"size(20)"`
+	Logo    string
 	TypeImg string
 
-	GoodsSPUs []*GoodsSPU `orm:"reverse(many)"`
-	HomeShowGoods []*HomeShowGoods `orm:"reverse(many)"`
+	GoodsSKUs []*GoodsSKU `orm:"reverse(many)"`
 }
 
 type GoodsSKU struct {	// 商品SKU表
@@ -62,6 +60,7 @@ type GoodsSKU struct {	// 商品SKU表
 	AddTime		time.Time	`orm:"auto_now_add"`	// 添加时间
 
 	GoodsSPU 	*GoodsSPU	`orm:"rel(fk)"`
+	GoodsType 	*GoodsType  `orm:"rel(fk)"`
 	GoodsImages []*GoodsImage	`orm:"reverse(many)"`
 	HomeShowGoods []*HomeShowGoods	`orm:"reverse(many)"`
 	HomeScrollBanner []*HomeScrollBanner `orm:"reverse(many)"`
@@ -91,12 +90,14 @@ type HomePromotionBanner struct {	// 首页推广商品表
 	Index 	int		`orm:"default(0)"`
 }
 
-type HomeShowGoods struct {	// 首页展示商品表
+// 首页展示商品表
+// 1.控制每个类型中商品展示顺序, 不控制类型的顺序
+// 2.同一类型商品, 部分文字展示, 部分图片展示
+type HomeShowGoods struct {
 	Id 			int
 	DisplayType	int		`orm:"default(1)"`	// 展示类型	0 图片 1 文字
 	Index 		int		`orm:"default(0)"`
 
-	GoodsType	*GoodsType	`orm:"rel(fk)"`
 	GoodsSKU	*GoodsSKU	`orm:"rel(fk)"`
 }
 
