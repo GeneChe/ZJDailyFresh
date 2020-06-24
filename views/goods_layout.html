@@ -55,7 +55,7 @@
                 <span></span>
                 <ul class="subnav">
                     {{range .types}}
-                        <li><a href="#"><img src="http://192.168.3.99:8888/{{.Logo}}" alt="" style="width: 25px;height: 25px;">{{.Name}}</a></li>
+                        <li><a href="/goodsList?typeId={{.Id}}"><img src="http://192.168.3.99:8888/{{.Logo}}" alt="" style="width: 25px;height: 25px;">{{.Name}}</a></li>
                     {{end}}
                 </ul>
             </div>

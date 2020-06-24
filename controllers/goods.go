@@ -58,6 +58,10 @@ func (g *GoodsController) ShowHomePage() {
 }
 
 // 展示商品详情
+// 历史记录添加规则: 什么时候添加?  什么时候访问?  用什么存储及存储哪些内容?
+// 1. 在登录后访问商品详情, 添加一条记录
+// 2. 在用户中心页获取
+// 3. 使用redis存储, 存储用户id对应的商品id, 而且有顺序要求
 func (g *GoodsController) ShowGoodsDetail() {
 	goodsId, err := g.GetInt("id")
 	if err != nil {
@@ -67,23 +71,73 @@ func (g *GoodsController) ShowGoodsDetail() {
 	}
 
 	o := orm.NewOrm()
-	// 商品详情数据
+	// 1.商品详情数据
 	var goodsSKU models.GoodsSKU
 	// goodsSKU.Id = goodsId
 	// _ = o.Read(&goodsSKU)	缺少详情信息
 	_ = o.QueryTable("GoodsSKU").RelatedSel("GoodsType", "GoodsSPU").
 		Filter("Id", goodsId).One(&goodsSKU)
 
-	// 新品推荐数据 -- 获取同类型时间靠前的前两条数据
+	// 2.新品推荐数据 -- 获取同类型时间靠前的前两条数据
 	var newGoods []*models.GoodsSKU
 	_, _ = o.QueryTable("GoodsSKU").RelatedSel("GoodsType").
 		Filter("GoodsType", goodsSKU.GoodsType).
 		OrderBy("-AddTime").Limit(2, 0).All(&newGoods)
 
+	// 3.添加历史游览记录数据
+	userInfo := GetUserInfo(&g.Controller)
+	if userInfo != nil { // 用户已经登录
+		conn := GetRedisConn()
+		if conn != nil {
+			defer conn.Close()
+			cacheKey := GoodsHistoryCacheKey(userInfo["userId"])
+			// 删除缓存中已有相同的商品记录 -- lrem key count value -- count为0表示删除全部value
+			_, _ = conn.Do("lrem", cacheKey, 0, goodsId)
+			// 存储记录 -- lpush key value
+			_, _ = conn.Do("lpush", cacheKey, goodsId)
+		}
+	}
+
 	showLayout(&g.Controller, "商品详情")
 	g.Data["newGoods"] = newGoods
 	g.Data["goodsSKU"] = goodsSKU
 	g.TplName = "detail.html"
+}
+
+// 展示商品列表页
+func (g *GoodsController) ShowGoodsList() {
+	typeId, err := g.GetInt("typeId")
+	if err != nil {
+		logs.Error("get goods list err with wrong type id", err)
+		g.Redirect("/", 302)
+		return
+	}
+
+	o := orm.NewOrm()
+	// 1.商品类型数据
+	var goodsType models.GoodsType
+	goodsType.Id = typeId
+	_ = o.Read(&goodsType)
+
+	// 2.新品推荐数据
+	var newGoods []*models.GoodsSKU
+	_, _ = o.QueryTable("GoodsSKU").Filter("GoodsType", typeId).
+		OrderBy("-AddTime").Limit(2, 0).All(&newGoods)
+
+	// 3.商品列表数据
+	var goods []*models.GoodsSKU
+	_, _ = o.QueryTable("GoodsSKU").Filter("goods_type_id", typeId).All(&goods)
+
+	g.Data["typeInfo"] = goodsType
+	g.Data["newGoods"] = newGoods
+	g.Data["goods"] = goods
+	showLayout(&g.Controller, "商品列表")
+	g.TplName = "list.html"
+}
+
+// 用户游览商品记录redis缓存key
+func GoodsHistoryCacheKey(uid string) string {
+	return "user:goods:history:" + uid
 }
 
 // 商品模块layout视图

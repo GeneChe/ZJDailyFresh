@@ -7,6 +7,7 @@ import (
 	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/orm"
 	"github.com/astaxie/beego/utils"
+	"github.com/gomodule/redigo/redis"
 	"regexp"
 	"strconv"
 )
@@ -199,6 +200,26 @@ func (u *UserController) ShowUserInfo() {
 	} else {
 		u.Data["addr"] = addr
 	}
+
+	// 获取历史记录数据
+	conn := GetRedisConn()
+	if conn != nil {
+		defer conn.Close()
+		cacheKey := GoodsHistoryCacheKey(userInfo["userId"])
+		// 获取前五条数据
+		rep, err := conn.Do("lrange", cacheKey, 0, 4)
+		goodsIDs, err := redis.Ints(rep, err)	// 使用redigo框架的 助手函数 转换返回结果
+		if err != nil || len(goodsIDs) == 0 {	// 这里需要判断goodsIDs是否有数据
+			logs.Error("there is not history info", err)
+		} else {
+			var goods []*models.GoodsSKU
+			// **注意filter中的值不能为空(nil, 空map或切片等), 否则程序崩溃**
+			_, _ = orm.NewOrm().QueryTable("GoodsSKU").
+				Filter("Id__in", goodsIDs).All(&goods)
+			u.Data["goods"] = goods
+		}
+	}
+
 	u.Data["tabName"] = "userCenter"
 	u.Layout = "user_center_layout.html"
 	u.TplName = "user_center_info.html"
@@ -273,10 +294,13 @@ func (u *UserController) HandleUserAddr() {
 // 获取session中的用户信息
 func GetUserInfo(c *beego.Controller) (u map[string]string) {
 	userInfo := c.GetSession("userInfo")
-	// map和slice的零值为nil
 	u, ok := userInfo.(map[string]string)
+	// session值不存在时 userInfo为 nil
+	// userInfo的断言 u 为 map[]
+	// nil断言map类型, 得到的默认值是 map[]
 	if userInfo == nil || !ok {
 		c.Data["userName"] = ""
+		return nil
 	} else {
 		c.Data["userName"] = u["userName"]
 	}
