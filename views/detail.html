@@ -65,6 +65,53 @@
 
 <script type="text/javascript" src="/static/js/jquery-1.12.4.min.js"></script>
 <script type="text/javascript">
+	calculateGoodsPrice();
+	function calculateGoodsPrice() {
+		// 获取单价和数量
+		let price = $('.show_pirze em').html();
+		let count = $('.num_show').val();
+		let total = parseFloat(price) * parseInt(count);
+		// 设置显示总价
+		$('.total em').html(total.toFixed(2) + '元');
+	}
+
+	// 增加商品事件
+	$('.add').click(function () {
+		// 获取原数量
+		let count = $('.num_show').val();
+		count = parseInt(count) + 1;
+		// 展示增加的数量
+		$('.num_show').val(count);
+		// 更新商品总价
+		calculateGoodsPrice();
+	});
+
+	// 减少商品事件
+	$('.minus').click(function () {
+		let count = $('.num_show').val();
+		count = parseInt(count) - 1;
+		if (count < 1) {
+			return false;
+		}
+
+		$('.num_show').val(count);
+		calculateGoodsPrice();
+	});
+
+	// 手动输入数量事件
+	$('.num_show').blur(function () {
+		// 获取输入的数量
+		let count = $(this).val();
+		// 校验数量
+		// 是否为非数字值isNaN(空字符串会返回false), 全空格, 小于一
+		if (isNaN(count) || count.trim().length == 0 || parseInt(count) < 1) {
+			count = 1;
+		}
+		$(this).val(parseInt(count));
+		// 更新总价
+		calculateGoodsPrice();
+	});
+
 	var $add_x = $('#add_cart').offset().top;
 	var $add_y = $('#add_cart').offset().left;
 
