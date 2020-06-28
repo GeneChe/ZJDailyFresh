@@ -5,7 +5,13 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/orm"
+	"math"
 	"os"
+)
+
+const (
+	GoodsListPageSize = 1
+	ShowMaxPageNumber = 5
 )
 
 type GoodsController struct {
@@ -126,8 +132,39 @@ func (g *GoodsController) ShowGoodsList() {
 
 	// 3.商品列表数据
 	var goods []*models.GoodsSKU
-	_, _ = o.QueryTable("GoodsSKU").Filter("goods_type_id", typeId).All(&goods)
+	// 分页
+	currentPage, err := g.GetInt("currentPage")
+	if err != nil {
+		currentPage = 1
+	}
+	count, err := o.QueryTable("GoodsSKU").Filter("GoodsType", typeId).Count()
+	pageCount := int(math.Ceil(float64(count) / GoodsListPageSize))
+	pages := getPagination(currentPage, pageCount)
+	// 上一页,下一页
+	prePage := currentPage - 1
+	if prePage < 1 {
+		prePage = 1
+	}
+	nextPage := currentPage + 1
+	if nextPage > pageCount {
+		nextPage = pageCount
+	}
+	// 排序
+	sort := g.GetString("sort")
+	qs := o.QueryTable("GoodsSKU").Filter("GoodsType", typeId).Limit(GoodsListPageSize, (currentPage-1)*GoodsListPageSize)
+	if sort == "" {
+		_, _ = qs.All(&goods)
+	} else if sort == "price" {
+		_, _ = qs.OrderBy("-Price").All(&goods)
+	} else if sort == "sales" {
+		_, _ = qs.OrderBy("-Sales").All(&goods)
+	}
 
+	g.Data["currentSort"] = sort
+	g.Data["currentPage"] = currentPage
+	g.Data["prePage"] = prePage
+	g.Data["nextPage"] = nextPage
+	g.Data["pages"] = pages
 	g.Data["typeInfo"] = goodsType
 	g.Data["newGoods"] = newGoods
 	g.Data["goods"] = goods
@@ -135,9 +172,64 @@ func (g *GoodsController) ShowGoodsList() {
 	g.TplName = "list.html"
 }
 
+// 处理商品搜索
+func (g *GoodsController) HandleSearch() {
+	goodsName := g.GetString("goodsName")
+	var goods []*models.GoodsSKU
+	qs := orm.NewOrm().QueryTable("GoodsSKU")
+	if goodsName == "" {
+		_, _ = qs.All(&goods)
+	} else {
+		_, _ = qs.Filter("Name__icontains", goodsName).All(&goods)
+	}
+
+	g.Data["goods"] = goods
+	showLayout(&g.Controller, "商品搜索")
+	g.TplName = "search.html"
+}
+
 // 用户游览商品记录redis缓存key
 func GoodsHistoryCacheKey(uid string) string {
 	return "user:goods:history:" + uid
+}
+
+// 获取商品页展示页码
+// 分页效果:
+// 1. 如果商品不超过五页, 展示所有的页数	1, 2
+// 2. 当商品超过五页, 只显示五个页数, 且当前显示页在页数中间	1 2 3(当前) 4 5
+// 3. 当商品超过五页, 如果当前显示页在前三或后三, 则显示固定页数 1 2(当前) 3 4 5
+func getPagination(currentPage, pageCount int) []int {
+	var pages []int
+	middlePage := int(math.Ceil(float64(ShowMaxPageNumber) / 2))
+	if pageCount <= ShowMaxPageNumber {
+		pages = make([]int, pageCount)
+		for i := 1; i <= pageCount; i++ {
+			pages[i-1] = i
+		}
+	} else if currentPage <= middlePage {
+		pages = make([]int, ShowMaxPageNumber)
+		for i := 1; i <= ShowMaxPageNumber; i++ {
+			pages[i-1] = i
+		}
+	} else if currentPage > pageCount - middlePage {
+		pages = make([]int, ShowMaxPageNumber)
+		for i := 0; i < ShowMaxPageNumber; i++ {
+			pages[i] = (pageCount-ShowMaxPageNumber+1)+i
+		}
+	} else {
+		pages = make([]int, ShowMaxPageNumber)
+		for i := 1; i <= ShowMaxPageNumber; i++ {
+			if i < middlePage {
+				pages[i-1] = currentPage-(middlePage-i)
+			} else if i == middlePage {
+				pages[i-1] = currentPage
+			} else {
+				pages[i-1] = currentPage+(i-middlePage)
+			}
+		}
+	}
+
+	return pages
 }
 
 // 商品模块layout视图

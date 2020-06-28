@@ -22,9 +22,9 @@
 
 	<div class="r_wrap fr clearfix">
 		<div class="sort_bar">
-			<a href="#" class="active">默认</a>
-			<a href="#">价格</a>
-			<a href="#">人气</a>
+			<a href="/goodsList?typeId={{.typeInfo.Id}}" {{if compare .currentSort ""}} class="active" {{end}}>默认</a>
+			<a href="/goodsList?typeId={{.typeInfo.Id}}&sort=price" {{if compare .currentSort "price"}} class="active" {{end}}>价格</a>
+			<a href="/goodsList?typeId={{.typeInfo.Id}}&sort=sales" {{if compare .currentSort "sales"}} class="active" {{end}}>人气</a>
 		</div>
 
 		<ul class="goods_type_list clearfix">
@@ -42,14 +42,11 @@
 		</ul>
 
 		<div class="pagenation">
-			<a href="#">&lt;上一页</a>
-			<a href="#" class="active">1</a>
-			<a href="#">2</a>
-			<a href="#">3</a>
-			<a href="#">4</a>
-			<a href="#">5</a>
-			<span>...</span>
-			<a href="#">下一页&gt;</a>
+			<a href="/goodsList?typeId={{.typeInfo.Id}}&currentPage={{.prePage}}&sort={{.currentSort}}">&lt;上一页</a>
+			{{range .pages}}
+				<a href="/goodsList?typeId={{$.typeInfo.Id}}&currentPage={{.}}&sort={{$.currentSort}}" {{if compare $.currentPage .}} class="active" {{end}}>{{.}}</a>
+			{{end}}
+			<a href="/goodsList?typeId={{.typeInfo.Id}}&currentPage={{.nextPage}}&sort={{.currentSort}}">下一页&gt;</a>
 		</div>
 	</div>
 </div>

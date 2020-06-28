@@ -26,6 +26,8 @@ func init() {
     beego.Router("/", &controllers.GoodsController{}, "get:ShowHomePage")
 	beego.Router("/goodsDetail", &controllers.GoodsController{}, "get:ShowGoodsDetail")
 	beego.Router("/goodsList", &controllers.GoodsController{}, "get:ShowGoodsList")
+	beego.Router("/goodsSearch", &controllers.GoodsController{}, "post:HandleSearch")
+
     // 购物车模块
 
     // 订单模块

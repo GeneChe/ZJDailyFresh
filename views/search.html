@@ -1,0 +1,17 @@
+<div class="main_wrap clearfix">
+    <div class="r_wrap fr clearfix">
+        <ul class="goods_type_list clearfix">
+            {{range .goods}}
+                <li>
+                    <a href="/goodsDetail?id={{.Id}}"><img src="http://192.168.3.99:8888/{{.GoodsImg}}"></a>
+                    <h4><a href="/goodsDetail?id={{.Id}}">{{.Name}}</a></h4>
+                    <div class="operate">
+                        <span class="prize">￥{{.Price}}</span>
+                        <span class="unit">{{.Price}}/{{.GoodsUnit}}</span>
+                        <a href="#" class="add_goods" title="加入购物车"></a>
+                    </div>
+                </li>
+            {{end}}
+        </ul>
+    </div>
+</div>
