@@ -29,10 +29,12 @@ func init() {
 	beego.Router("/goodsSearch", &controllers.GoodsController{}, "post:HandleSearch")
 
     // 购物车模块
+	beego.Router("/user/addCart", &controllers.CartController{}, "post:HandleAddCart")
+	beego.Router("/user/userCart", &controllers.CartController{}, "get:ShowUserCart")
 
     // 订单模块
 
-    // 后台模块
+    // 后台模块 -- 项目dailyFreshManage
 }
 
 func filterFunc(c *context.Context) {

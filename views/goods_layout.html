@@ -28,7 +28,7 @@
                     <span>|</span>
                     <a href="/user/usercenter">用户中心</a>
                     <span>|</span>
-                    <a href="cart.html">我的购物车</a>
+                    <a href="/user/userCart">我的购物车</a>
                     <span>|</span>
                     <a href="user_center_order.html">我的订单</a>
                 </div>
@@ -46,7 +46,7 @@
         </div>
         <div class="guest_cart fr">
             <a href="cart.html" class="cart_name fl">我的购物车</a>
-            <div class="goods_count fl" id="show_count">1</div>
+            <div class="goods_count fl" id="show_count">{{.cartCount}}</div>
         </div>
     </div>
 
@@ -86,6 +86,5 @@
         <p>CopyRight © 2016 北京天天生鲜信息技术有限公司 All Rights Reserved</p>
         <p>电话：010-****888    京ICP备*******8号</p>
     </div>
-    <div class="add_jump"></div>
 </body>
 </html>

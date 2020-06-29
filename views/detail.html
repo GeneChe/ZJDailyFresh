@@ -27,7 +27,8 @@
 		<div class="total">总价：<em>16.80元</em></div>
 		<div class="operate_btn">
 			<a href="javascript:;" class="buy_btn">立即购买</a>
-			<a href="javascript:;" class="add_cart" id="add_cart">加入购物车</a>
+			<!-- 给a元素添加自定义属性 data-id -->
+			<a href="javascript:;" class="add_cart" id="add_cart" data-id="{{.goodsSKU.Id}}">加入购物车</a>
 		</div>
 	</div>
 </div>
@@ -63,6 +64,7 @@
 	</div>
 </div>
 
+<div class="add_jump"></div>
 <script type="text/javascript" src="/static/js/jquery-1.12.4.min.js"></script>
 <script type="text/javascript">
 	calculateGoodsPrice();
@@ -112,22 +114,32 @@
 		calculateGoodsPrice();
 	});
 
+	// 添加到购物车动画实现
 	var $add_x = $('#add_cart').offset().top;
 	var $add_y = $('#add_cart').offset().left;
 
 	var $to_x = $('#show_count').offset().top;
 	var $to_y = $('#show_count').offset().left;
-
-	$(".add_jump").css({'left':$add_y+80,'top':$add_x+10,'display':'block'});
+	// prop获取元素现有属性的值, attr获取元素中自定义属性的值
 	$('#add_cart').click(function(){
-		$(".add_jump").stop().animate({
-			'left': $to_y+7,
-			'top': $to_x+7},
-			"fast", function() {
-				$(".add_jump").fadeOut('fast',function(){
-					$('#show_count').html(2);
-				});
-
+		$(".add_jump").css({'left':$add_y+80,'top':$add_x+10,'display':'block'});
+		$.post('/user/addCart', {
+			"skuId": $(this).attr("data-id"),
+			"number": $('.num_show').val()
+		}, function (data) {
+			if (data.result === "200") {
+				$(".add_jump").stop().animate({
+						'left': $to_y+7,
+						'top': $to_x+7},
+						"fast",
+						function() {
+							$(".add_jump").fadeOut('fast',function(){
+								$('#show_count').html(data.data);
+							});
+						});
+			} else {
+				alert(data.message);
+			}
 		});
 	})
 </script>

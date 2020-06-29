@@ -111,6 +111,11 @@ func (g *GoodsController) ShowGoodsDetail() {
 }
 
 // 展示商品列表页
+// 添加购物车规则:
+// 1. 在登录后, 商品详情和商品列表页可添加到购物车
+// 2. 在登录后, 我的购物车页中获取购物车数据
+// 3. 购物车要存 用户信息, 商品信息, 数量 且变化频繁, 使用redis的hash来存储
+// 4. 添加购物车时, 页面只是部分刷新, 所以使用ajax发请求
 func (g *GoodsController) ShowGoodsList() {
 	typeId, err := g.GetInt("typeId")
 	if err != nil {
@@ -239,6 +244,7 @@ func showLayout(c *beego.Controller, title string) {
 
 	c.Data["types"] = types
 	c.Data["title"] = title
+	c.Data["cartCount"] = GetCartCount(c)
 	GetUserInfo(c)
 	c.Layout = "goods_layout.html"
 }
