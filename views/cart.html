@@ -8,6 +8,76 @@
 	<script type="text/javascript" src="/static/js/jquery-1.12.4.min.js"></script>
 	<script type="text/javascript" src="/static/js/jquery-ui.min.js"></script>
 	<script type="text/javascript" src="/static/js/slide.js"></script>
+	<script type="text/javascript">
+		$(function () {
+			// 计算购物车总价和总数函数
+			function fnCalculateCart() {
+				let totalPrice = 0, totalCount = 0;
+				// 获取选中的每行ul
+				$(':checked').parents('.cart_list_td').each(function () {
+					// 获取每行中的小计和数量
+					let $tempPrice = $(this).children('.col07').html();
+					let $tempCount = $(this).find('.num_show').val();
+					totalPrice += parseFloat($tempPrice);	// 可以将字符串中的数字提取出来, 自动去掉 `元`
+					totalCount += parseInt($tempCount);
+				});
+				// 设置总价和总数
+				$('.settlements em').html(totalPrice);
+				$('.settlements b').html(totalCount);
+				$('.total_count em').html(totalCount);
+			}
+
+			// 设置全选/全不选
+			$('.settlements :checkbox').change(function () {
+				// 获取全选按钮的选中状态
+				let $is_checked = $(this).prop('checked');
+				// 设置每行的选中状态
+				$('.cart_list_td :checkbox').prop('checked', $is_checked);
+				fnCalculateCart();
+			});
+
+			// 根据商品的选中改变全选的状态
+			// 使用jquery更改.prop不会触发.change事件
+			$('.cart_list_td :checkbox').change(function () {
+				// 获取总行数, 总选中行数
+				let $totalRows = $('.cart_list_td').length;
+				let $selectedRows = $('.cart_list_td :checked').length;
+				let $mainBox = $('.settlements :checkbox');
+				if ($totalRows > $selectedRows) {
+					$mainBox.prop('checked', "");
+				} else {
+					$mainBox.prop('checked', "checked");
+				}
+				fnCalculateCart();
+			});
+
+			// 添加商品数量
+			$('.add').click(function () {
+				// 获取.add同行的input
+				let $numberInput = $(this).next();
+				let $newNumber = parseInt($numberInput.val()) + 1;
+				// 更新购物车中数据
+				$.ajax({
+					url: "/user/updateCart",
+					type: "POST",
+					data: {
+						skuId: $numberInput.attr("data-id"),
+						count: $newNumber
+					},
+					dataType: "json",
+					success: data => {
+						console.log(data);
+						if (data.result === "200") {
+							$numberInput.val($newNumber);
+						}
+					},
+					error: function (error) {
+						console.log(error);
+					}
+				});
+			});
+		});
+	</script>
 </head>
 <body>
 	<div class="header_con">
@@ -69,7 +139,7 @@
 			<li class="col06">
 				<div class="num_add">
 					<a href="javascript:;" class="add fl">+</a>
-					<input type="text" class="num_show fl" value="{{.count}}">
+					<input type="text" class="num_show fl" data-id="{{.goods.Id}}" value="{{.count}}">
 					<a href="javascript:;" class="minus fl">-</a>
 				</div>
 			</li>

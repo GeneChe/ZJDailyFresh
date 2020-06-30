@@ -137,8 +137,10 @@
 								$('#show_count').html(data.data);
 							});
 						});
-			} else {
+			} else if (data.result !== undefined) { // 正常请求返回的数据
 				alert(data.message);
+			} else { // 被过滤器拦截返回非json数据
+				window.location.href = "/login";
 			}
 		});
 	})

@@ -29,8 +29,12 @@ func init() {
 	beego.Router("/goodsSearch", &controllers.GoodsController{}, "post:HandleSearch")
 
     // 购物车模块
+    // 增加到购物车请求: 当未登录时, 设置了user前缀, 请求会被过滤器拦截, 返回一个login视图,
+    // 		--- 而ajax是后台请求不会进入login视图, 且ajax发送和接收的都是json格式数据.
+    // 更新购物车请求: 设置前缀user是因为更新操作是在登录后才能看到的页面触发的ajax操作, 不存在路由过滤问题
 	beego.Router("/user/addCart", &controllers.CartController{}, "post:HandleAddCart")
 	beego.Router("/user/userCart", &controllers.CartController{}, "get:ShowUserCart")
+	beego.Router("/user/updateCart", &controllers.CartController{}, "post:HandleUpdateCart")
 
     // 订单模块
 

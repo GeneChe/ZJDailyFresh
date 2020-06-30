@@ -55,6 +55,7 @@ func (g *GoodsController) ShowHomePage() {
 		homeData[k] = v
 	}
 
+	g.Data["cartCount"] = GetCartCount(&g.Controller)
 	g.Data["homeData"] = homeData
 	g.Data["types"] = goodsTypes
 	g.Data["scrollBanner"] = scrollBanner

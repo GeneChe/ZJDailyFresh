@@ -93,6 +93,29 @@ func (c *CartController) ShowUserCart() {
 	c.TplName = "cart.html"
 }
 
+// 处理更新购物车中商品数量
+func (c *CartController) HandleUpdateCart() {
+	skuId, err1 := c.GetInt("skuId")
+	count, err2 := c.GetInt("count")	// 这里是某个商品的总数, 不是单次增加的数
+	if err1 != nil || err2 != nil {
+		Response(&c.Controller, "1001", "请求参数错误", nil)
+		return
+	}
+
+	conn := GetRedisConn()
+	if conn == nil {
+		Response(&c.Controller, "1002", "链接redis错误", nil)
+		return
+	}
+	defer conn.Close()
+
+	userInfo := GetUserInfo(&c.Controller)
+	cacheKey := AddCartCacheKey(userInfo["userId"])
+	_, _ = conn.Do("hset", cacheKey, skuId, count)
+
+	Response(&c.Controller, "200", "请求成功", nil)
+}
+
 
 // 返回购物车的数量函数 -- 种类数量
 func GetCartCount(c *beego.Controller) (count int) {
