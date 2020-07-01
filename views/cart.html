@@ -16,6 +16,7 @@
 				// 获取选中的每行ul
 				$(':checked').parents('.cart_list_td').each(function () {
 					// 获取每行中的小计和数量
+					// 从页面获取的都是string类型, 要做运算时, 都要转换成对应类型再计算
 					let $tempPrice = $(this).children('.col07').html();
 					let $tempCount = $(this).find('.num_show').val();
 					totalPrice += parseFloat($tempPrice);	// 可以将字符串中的数字提取出来, 自动去掉 `元`
@@ -66,12 +67,128 @@
 					},
 					dataType: "json",
 					success: data => {
-						console.log(data);
 						if (data.result === "200") {
+							// 更新一行的数量
 							$numberInput.val($newNumber);
+							// 更新一行的小计
+							let $price = $(this).parents('ul').children('.col05').html();
+							$price = parseFloat($price).toFixed(2);
+							$(this).parents('ul').children('.col07').html($price * $newNumber + '元');
+							// 更新总价 -- 只有这行选中时, 增加数量才更新总价
+							let $isChecked = $(this).parents('ul').find(':checkbox').prop('checked');
+							// 通过prop('checked')获取时是bool类型, 设置时设置字符串""或"checked"
+							if ($isChecked) {
+								fnCalculateCart();
+							}
 						}
 					},
 					error: function (error) {
+						console.log(error);
+					}
+				});
+			});
+
+			// 减少商品数量
+			$('.minus').click(function () {
+				let $numberInput = $(this).prev();
+				let $newNumber = parseInt($numberInput.val()) - 1;
+				if (1 > $newNumber) {
+					$newNumber = 1;
+					$numberInput.val($newNumber);
+					return;
+				}
+				$.ajax({
+					url: "/user/updateCart",
+					type: "post",
+					data: {
+						skuId: $numberInput.attr("data-id"),
+						count: $newNumber
+					},
+					dataType: "json",
+					success: data => {
+						if (data.result === "200") {
+							$numberInput.val($newNumber);
+							let $price = $(this).parents('ul').children('.col05').html();
+							$price = parseFloat($price);
+							$(this).parents('ul').children('.col07').html(($price * $newNumber).toFixed(2) + '元');
+							let $isChecked = $(this).parents('ul').find(':checkbox').prop('checked');
+							if ($isChecked) {
+								fnCalculateCart();
+							}
+						}
+					},
+					error: error => {
+						console.log(error);
+					}
+				});
+
+			});
+
+			// 手动输入商品数量
+			let iPreNumber = 0; // 在输入框获得焦点时, 记录其原始值
+			$('.num_show').focus(function () {
+				iPreNumber = parseInt($(this).val());
+			});
+			$('.num_show').blur(function () {
+				let $inputNumber = $(this).val();
+				if (isNaN($inputNumber) || $inputNumber.trim().length === 0 || 1 > parseInt($inputNumber)) {
+					$inputNumber = iPreNumber;
+					$(this).val($inputNumber);
+					return;
+				}
+
+				$inputNumber = parseInt($inputNumber);
+				$.ajax({
+					url:"/user/updateCart",
+					type:"post",
+					data:{
+						skuId:$(this).attr("data-id"),
+						count:$inputNumber
+					},
+					dataType:"json",
+					success: data => {
+						if (data.result === "200") {
+							let $price = $(this).parents('.col06').prev().html();
+							$price = parseFloat($price);
+							$(this).parents('.col06').next().html(($price * $inputNumber).toFixed(2) + '元');
+							let $isChecked = $(this).parents('ul').find(':checkbox').prop('checked');
+							if ($isChecked) {
+								fnCalculateCart();
+							}
+						}
+					},
+					error: error => {
+						console.log(error);
+					}
+				});
+			});
+
+			// 删除商品
+			$('.col08 a').click(function () {
+				if (!confirm("确定删除该商品?")) {
+					return false;
+				}
+
+				// 1.删除redis中对应field
+				$.ajax({
+					url: "/user/deleteCart",
+					type: "post",
+					data: {
+						skuId: $(this).attr("data-id")
+					},
+					dataType: "json",
+					success: data => {
+						if (data.result === "200") {
+							// 2. 删除这一行元素
+							$(this).parents('ul').remove();
+							let $isChecked = $(this).parents('ul').find(':checkbox').prop('checked');
+							// 根据是否选中来更新总价
+							if ($isChecked) {
+								fnCalculateCart();
+							}
+						}
+					},
+					error: error => {
 						console.log(error);
 					}
 				});
@@ -144,7 +261,7 @@
 				</div>
 			</li>
 			<li class="col07">{{.rowPrice}}元</li>
-			<li class="col08"><a href="javascript:;">删除</a></li>
+			<li class="col08"><a href="javascript:;" data-id="{{.goods.Id}}">删除</a></li>
 		</ul>
 	{{end}}
 

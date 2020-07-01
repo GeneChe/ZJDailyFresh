@@ -35,6 +35,7 @@ func init() {
 	beego.Router("/user/addCart", &controllers.CartController{}, "post:HandleAddCart")
 	beego.Router("/user/userCart", &controllers.CartController{}, "get:ShowUserCart")
 	beego.Router("/user/updateCart", &controllers.CartController{}, "post:HandleUpdateCart")
+	beego.Router("/user/deleteCart", &controllers.CartController{}, "post:HandleDeleteCart")
 
     // 订单模块
 

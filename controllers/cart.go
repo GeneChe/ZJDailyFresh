@@ -116,6 +116,27 @@ func (c *CartController) HandleUpdateCart() {
 	Response(&c.Controller, "200", "请求成功", nil)
 }
 
+// 删除购物车商品操作
+func (c *CartController) HandleDeleteCart() {
+	skuId, err := c.GetInt("skuId")
+	if err != nil {
+		Response(&c.Controller, "1001", "商品id错误", nil)
+		return
+	}
+
+	conn := GetRedisConn()
+	if conn == nil {
+		Response(&c.Controller, "1002", "redis connect error", nil)
+		return
+	}
+	defer conn.Close()
+
+	userInfo := GetUserInfo(&c.Controller)
+	cacheKey := AddCartCacheKey(userInfo["userId"])
+	_, _ = conn.Do("hdel", cacheKey, skuId)
+
+	Response(&c.Controller, "200", "请求成功", nil)
+}
 
 // 返回购物车的数量函数 -- 种类数量
 func GetCartCount(c *beego.Controller) (count int) {
