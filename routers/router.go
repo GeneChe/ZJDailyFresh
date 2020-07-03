@@ -38,6 +38,8 @@ func init() {
 	beego.Router("/user/deleteCart", &controllers.CartController{}, "post:HandleDeleteCart")
 
     // 订单模块
+    beego.Router("/user/placeOrder", &controllers.OrderController{}, "post:HandlePlaceOrder")
+	beego.Router("/user/createOrder", &controllers.OrderController{}, "post:HandleCreateOrder")
 
     // 后台模块 -- 项目dailyFreshManage
 }

@@ -1,14 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
-<head>
-	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-	<title>天天生鲜-购物车</title>
-	<link rel="stylesheet" type="text/css" href="/static/css/reset.css">
-	<link rel="stylesheet" type="text/css" href="/static/css/main.css">
-	<script type="text/javascript" src="/static/js/jquery-1.12.4.min.js"></script>
-	<script type="text/javascript" src="/static/js/jquery-ui.min.js"></script>
-	<script type="text/javascript" src="/static/js/slide.js"></script>
-	<script type="text/javascript">
+<script type="text/javascript">
 		$(function () {
 			// 计算购物车总价和总数函数
 			function fnCalculateCart() {
@@ -193,62 +183,32 @@
 					}
 				});
 			});
+
+			// 购物车结算操作
+			// form提交数据时, 只会提交选中了的checkbox的value值. 不选中的不会提交
+			// 因此在购物车页面获取选中商品结算生成订单, 使用form包裹商品列表
+			// form只会提交有name的input元素的值
+			// *form提交时, 相同name的值会合并成数组提交*
+			$('.settlements a').click(function () {
+				// 提交form
+				$('.actionForm').submit();
+			});
 		});
 	</script>
-</head>
-<body>
-	<div class="header_con">
-		<div class="header">
-			<div class="welcome fl">欢迎来到天天生鲜!</div>
-			<div class="fr">
-				{{if compare .userName ""}}
-					<div class="login_btn fl">
-						<a href="/login">登录</a>
-						<span>|</span>
-						<a href="/register">注册</a>
-					</div>
-				{{else}}
-					<div class="login_btn fl">
-						欢迎您：<em>{{.userName}}</em>
-						<span>|</span>
-						<a href="/user/logout">退出</a>
-					</div>
-				{{end}}
-				<div class="user_link fl">
-					<span>|</span>
-					<a href="/user/usercenter">用户中心</a>
-					<span>|</span>
-					<a href="/user/userCart">我的购物车</a>
-					<span>|</span>
-					<a href="user_center_order.html">我的订单</a>
-				</div>
-			</div>
-		</div>
-	</div>
 
-	<div class="search_bar clearfix">
-		<a href="/" class="logo fl"><img src="/static/images/logo.png" alt="logo"></a>
-		<div class="sub_page_name fl">|&nbsp;&nbsp;&nbsp;&nbsp;购物车</div>
-		<div class="search_con fr">
-			<form action="/goodsSearch" method="post">
-				<input type="text" class="input_text fl" name="goodsName" placeholder="搜索商品">
-				<input type="submit" class="input_btn fr" name="" value="搜索">
-			</form>
-		</div>		
-	</div>
-
-	<div class="total_count">全部商品<em>{{.totalCount}}</em>件</div>
-	<ul class="cart_list_th clearfix">
-		<li class="col01">商品名称</li>
-		<li class="col02">商品单位</li>
-		<li class="col03">商品价格</li>
-		<li class="col04">数量</li>
-		<li class="col05">小计</li>
-		<li class="col06">操作</li>
-	</ul>
+<div class="total_count">全部商品<em>{{.totalCount}}</em>件</div>
+<ul class="cart_list_th clearfix">
+	<li class="col01">商品名称</li>
+	<li class="col02">商品单位</li>
+	<li class="col03">商品价格</li>
+	<li class="col04">数量</li>
+	<li class="col05">小计</li>
+	<li class="col06">操作</li>
+</ul>
+<form class="actionForm" action="/user/placeOrder" method="post">
 	{{range .cartContents}}
 		<ul class="cart_list_td clearfix">
-			<li class="col01"><input type="checkbox" name="" checked></li>
+			<li class="col01"><input type="checkbox" name="skuId" value="{{.goods.Id}}" checked></li>
 			<li class="col02"><img src="http://192.168.3.99:8888/{{.goods.GoodsImg}}"></li>
 			<li class="col03">{{.goods.Name}}<br><em>{{.goods.Price}}元/{{.goods.GoodsUnit}}</em></li>
 			<li class="col04">{{.goods.GoodsUnit}}</li>
@@ -264,27 +224,11 @@
 			<li class="col08"><a href="javascript:;" data-id="{{.goods.Id}}">删除</a></li>
 		</ul>
 	{{end}}
+</form>
 
-	<ul class="settlements">
-		<li class="col01"><input type="checkbox" name="" checked=""></li>
-		<li class="col02">全选</li>
-		<li class="col03">合计(不含运费)：<span>¥</span><em>{{.totalPrice}}</em><br>共计<b>{{.totalCount}}</b>件商品</li>
-		<li class="col04"><a href="place_order.html">去结算</a></li>
-	</ul>
-
-	<div class="footer">
-		<div class="foot_link">
-			<a href="#">关于我们</a>
-			<span>|</span>
-			<a href="#">联系我们</a>
-			<span>|</span>
-			<a href="#">招聘人才</a>
-			<span>|</span>
-			<a href="#">友情链接</a>		
-		</div>
-		<p>CopyRight © 2016 北京天天生鲜信息技术有限公司 All Rights Reserved</p>
-		<p>电话：010-****888    京ICP备*******8号</p>
-	</div>
-	
-</body>
-</html>
+<ul class="settlements">
+	<li class="col01"><input type="checkbox" name="" checked></li>
+	<li class="col02">全选</li>
+	<li class="col03">合计(不含运费)：<span>¥</span><em>{{.totalPrice}}</em><br>共计<b>{{.totalCount}}</b>件商品</li>
+	<li class="col04"><a href="javascript:;">去结算</a></li>
+</ul>

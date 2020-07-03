@@ -104,16 +104,15 @@ type HomeShowGoods struct {
 type OrderInfo struct {	// 订单表
 	Id 			int
 	OrderId		string	`orm:"unique"`
-	PayWay		int		// 支付方式: 0 支付宝, 1 微信, 2 银行卡
+	PayWay		int		// 支付方式: 1 货到付款, 2 微信, 3 支付宝, 4 银行卡
 	TotalCount	int		// 商品总数量
 	TotalPrice	int		// 商品总价格
 	TransitPrice int	// 运费
 	OrderStatus int		`orm:"default(0)"`	// 订单状态 0 未付款, 1 付款成功, 2 付款失败
-	TradeNo		string	// 支付编号
+	TradeNo		string	`orm:"default('')"` // 第三方的支付编号
 	OrderTime	time.Time	`orm:"auto_now_add"`	// 订单创建时间
 	OrderFinishTime time.Time `orm:"auto_now"`		// 订单完成时间
 	OrderCommentTime time.Time `orm:"auto_now_add"`	// 订单评论时间
-	Comment 	string
 
 	User		*User		`orm:"rel(fk)"`
 	Addr		*Address	`orm:"rel(fk)"`
@@ -123,6 +122,8 @@ type OrderInfo struct {	// 订单表
 type OrderGoods struct {	// 订单商品表
 	Id 		int
 	Count	int		`orm:"default(1)"`
+	Price   int
+	Comment string	`orm:"default('')"`
 
 	OrderInfo	*OrderInfo	`orm:"rel(fk)"`
 	GoodsSKU	*GoodsSKU	`orm:"rel(fk)"`

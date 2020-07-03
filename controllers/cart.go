@@ -90,6 +90,8 @@ func (c *CartController) ShowUserCart() {
 	c.Data["totalPrice"] = totalPrice
 	c.Data["totalCount"] = totalCount
 	c.Data["cartContents"] = cartContents
+	c.Data["pageTitle"] = "购物车"
+	c.Layout = "cart_layout.html"
 	c.TplName = "cart.html"
 }
 
