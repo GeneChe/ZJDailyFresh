@@ -71,7 +71,9 @@ func (c *CartController) ShowUserCart() {
 	}
 	// 查询商品数据
 	var goodsSkus []*models.GoodsSKU
-	_, _ = orm.NewOrm().QueryTable("GoodsSKU").Filter("Id__in", ids).All(&goodsSkus)
+	if len(ids) > 0 {
+		_, _ = orm.NewOrm().QueryTable("GoodsSKU").Filter("Id__in", ids).All(&goodsSkus)
+	}
 	// 拼接最终数据
 	cartContents := make([]map[string]interface{}, len(goodsSkus))
 	var totalPrice, totalCount int

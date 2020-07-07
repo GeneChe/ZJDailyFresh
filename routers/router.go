@@ -40,6 +40,8 @@ func init() {
     // 订单模块
     beego.Router("/user/placeOrder", &controllers.OrderController{}, "post:HandlePlaceOrder")
 	beego.Router("/user/createOrder", &controllers.OrderController{}, "post:HandleCreateOrder")
+	beego.Router("/user/pay", &controllers.OrderController{}, "get:ShowPay")
+	beego.Router("/user/paySyncResult", &controllers.OrderController{}, "get:ShowPaySyncResult")
 
     // 后台模块 -- 项目dailyFreshManage
 }

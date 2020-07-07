@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	GoodsListPageSize = 1
+	GoodsListPageSize = 2
 	ShowMaxPageNumber = 5
 )
 

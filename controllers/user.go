@@ -8,6 +8,7 @@ import (
 	"github.com/astaxie/beego/orm"
 	"github.com/astaxie/beego/utils"
 	"github.com/gomodule/redigo/redis"
+	"math"
 	"regexp"
 	"strconv"
 )
@@ -227,7 +228,49 @@ func (u *UserController) ShowUserInfo() {
 
 // 展示用户订单页
 func (u *UserController) ShowUserOrder() {
-	_ = GetUserInfo(&u.Controller)
+	userInfo := GetUserInfo(&u.Controller)
+	o := orm.NewOrm()
+	currentPage, err := u.GetInt("currentPage")
+	if err != nil {
+		currentPage = 1
+	}
+
+	// 1. 获取用户的订单信息
+	// 分页处理
+	qs := o.QueryTable("OrderInfo").Filter("User", userInfo["userId"])
+	count, _ := qs.Count()
+	pageCount := int(math.Ceil(float64(count) / GoodsListPageSize))
+	pages := getPagination(currentPage, pageCount)
+	prePage := currentPage - 1
+	if prePage < 1 {
+		prePage = 1
+	}
+	nextPage := currentPage + 1
+	if nextPage > pageCount {
+		nextPage = pageCount
+	}
+	u.Data["prePage"] = prePage
+	u.Data["nextPage"] = nextPage
+	u.Data["currentPage"] = currentPage
+	u.Data["pages"] = pages
+
+	var orders []*models.OrderInfo
+	_, _ = qs.Limit(GoodsListPageSize, (currentPage-1)*GoodsListPageSize).All(&orders)
+
+	userOrders := make([]map[string]interface{}, len(orders))
+	// 2. 获取订单的商品信息
+	for k, v := range orders {
+		var goodsOrders []*models.OrderGoods
+		_, _ = o.QueryTable("OrderGoods").RelatedSel( "GoodsSKU").
+			Filter("OrderInfo", v).All(&goodsOrders)
+
+		temp := make(map[string]interface{})
+		temp["orderInfo"] = v
+		temp["goodsOrders"] = goodsOrders
+		userOrders[k] = temp
+	}
+
+	u.Data["userOrders"] = userOrders
 	u.Data["tabName"] = "userOrder"
 	u.Layout = "user_center_layout.html"
 	u.TplName = "user_center_order.html"
@@ -265,6 +308,11 @@ func (u *UserController) HandleUserAddr() {
 	// 处理信息
 	// 添加的地址直接是默认的地址
 	o := orm.NewOrm()
+	var user models.User
+	userId := GetUserInfo(&u.Controller)["userId"]
+	user.Id, _ = strconv.Atoi(userId)
+
+	// bug 应该查询当前用户是否有默认地址
 	var defaultAddr models.Address
 	defaultAddr.IsDefault = true
 	err := o.Read(&defaultAddr, "IsDefault")
@@ -272,12 +320,9 @@ func (u *UserController) HandleUserAddr() {
 		defaultAddr.IsDefault = false
 		_, _ = o.Update(&defaultAddr, "IsDefault")
 	}
+
 	// 新增地址, 设置为默认地址
 	var newAddr models.Address
-	var user models.User
-	userId := GetUserInfo(&u.Controller)["userId"]
-	user.Id, _ = strconv.Atoi(userId)
-
 	newAddr.Receiver = receiver
 	newAddr.Addr = address
 	newAddr.PostCode = postCode
